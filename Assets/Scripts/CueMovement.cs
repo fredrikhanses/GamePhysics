@@ -8,7 +8,7 @@ public class CueMovement : MonoBehaviour
     [SerializeField]
     Vector3 input;
     [SerializeField]
-    Vector3 velocity;
+    public Vector3 velocity;
     [SerializeField]
     Vector3 acc;
     [SerializeField]
@@ -21,8 +21,18 @@ public class CueMovement : MonoBehaviour
     float drawTime;
     [SerializeField]
     float lastShot;
+    [SerializeField]
+    float speed;
     bool shot = false;
     float shootTimer;
+    public float minimumX = -90.0f;
+    public float maximumX = 90.0f;
+    public float minimumY = -60.0f;
+    public float maximumY = 60.0f;
+    float rotationY = 0.0f;
+    float rotationX = 0.0f;
+    public float sensitivityX = 1.0f;
+    public float sensitivityY = 1.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -34,19 +44,32 @@ public class CueMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        rotationX = Input.GetAxis(mouseX) * sensitivityX;
+        rotationX = Mathf.Clamp(rotationX, minimumX, maximumX);
+        rotationY = Input.GetAxis(mouseY) * sensitivityY;
+        rotationY = -Mathf.Clamp(rotationY, minimumY, maximumY);
+        if (rotationX != 0.0f)
+        {
+            transform.Rotate(Vector3.right, rotationX);
+        }
+        //if (rotationY != 0.0f)
+        //{
+        //    transform.Rotate(Vector3.forward, rotationY);
+        //}
+        input.z = Input.GetAxis(horizontal) * 100f;
+        input.y = Input.GetAxis(vertical) * 100f;
         input.x = 0.0f;
-        input.z = Input.GetAxis(mouseX) * 250f;
-        input.y = Input.GetAxis(mouseY) * 250f;
         bool draw = Input.GetMouseButton(0);
         bool shoot = Input.GetMouseButtonUp(0);
         bool reset = Input.GetMouseButtonDown(1);
         if (reset)
         {
-            transform.position = new Vector3(35.0f, 1.0f, 0.0f);
+            transform.position = new Vector3(50.0f, 5.0f, 0.0f);
+            transform.eulerAngles = new Vector3(0.0f, 0.0f, 90.0f);
         }
         if (draw)
         {
-            input.x = 100.0f;
+            input.x = -50.0f;
             drawTime += Time.deltaTime;
         }
         if (shoot)
@@ -55,24 +78,72 @@ public class CueMovement : MonoBehaviour
         }
         if (shot)
         {
-            input.x = drawTime * -1000.0f;
+            input.x = drawTime * 1000.0f;
+            input.x = Mathf.Clamp(input.x, 0.0f, 3000.0f);
             lastShot = input.x;
             shootTimer += Time.deltaTime;
-            if (shootTimer >= 0.5f)
+            if (shootTimer >= 0.2f)
             {
                 shot = false;
                 drawTime = 0.0f;
                 shootTimer = 0.0f;
+                //transform.position = new Vector3(35.0f, 10.0f, 0.0f);
+                //transform.eulerAngles = new Vector3(0.0f, 0.0f, 90.0f);
             }
         }
-        ApplyForce(input);
+        Vector3 directionForward = transform.up;
+        Vector3 directionRight = transform.forward;
+        Vector3 force = input.z * directionRight + input.x * directionForward;
+        force.y = input.y;
+        ApplyForce(force);
     }
 
     void ApplyForce(Vector3 force)
     {
         acc = force * oneOverMass;
         velocity += acc * Time.deltaTime;
+        if (speed > 50.0f && !shot)
+        {
+            velocity = velocity.normalized * 50.0f;
+        }
         transform.position += velocity * Time.deltaTime;
+        speed = velocity.magnitude;
+        if (transform.position.x > 50.0f)
+        {
+            Vector3 temp = new Vector3(transform.position.x - 50.0f, 0.0f, 0.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
+        if (transform.position.x < -50.0f)
+        {
+            Vector3 temp = new Vector3(transform.position.x + 50.0f, 0.0f, 0.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
+        if (transform.position.y < 0.0f)
+        {
+            Vector3 temp = new Vector3(0.0f, transform.position.y, 0.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
+        if (transform.position.y > 25.0f)
+        {
+            Vector3 temp = new Vector3(0.0f, transform.position.y - 25.0f, 0.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
+        if (transform.position.z > 25.0f)
+        {
+            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z - 25.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
+        if (transform.position.z < -25.0f)
+        {
+            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z + 25.0f);
+            transform.position -= temp;
+            velocity = Vector3.zero;
+        }
         if (force.magnitude == 0.0f)
         {
             friction += 0.5f * Time.deltaTime;

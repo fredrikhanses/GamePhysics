@@ -5,6 +5,9 @@ namespace FutureGames.GamePhysics
 {
     public class MonoPlane : MonoBehaviour
     {
+        [SerializeField]
+        CueMovement cueMovement;
+
         Vector3 Normal => transform.up;
         Vector3 Position => transform.position;
 
@@ -14,9 +17,17 @@ namespace FutureGames.GamePhysics
         const float deltaMoveCoef = 0.2f;
         const float correctedPostionCoef = 2.5f;
 
+        MonoPhysicalObject ParentPhysicalObject => GetComponentInParent<MonoPhysicalObject>();
+
+        Vector3 ParentVelocity => ParentPhysicalObject == null ? Vector3.zero : ParentPhysicalObject.Velocity;
+
         private void Start()
         {
             spheres = FindObjectsOfType<MonoPhysicalSphere>();
+            if (cueMovement == null)
+            {
+                cueMovement = FindObjectOfType<CueMovement>();
+            }
         }
 
         private void FixedUpdate()
@@ -61,7 +72,8 @@ namespace FutureGames.GamePhysics
 
         bool WillBeCollision(MonoPhysicalSphere sphere)
         {
-            return Vector3.Dot(sphere.Velocity, Normal) < 0f;
+            //return Vector3.Dot(sphere.Velocity, Normal) < 0f;
+            return Vector3.Dot(RelativeVelocity(sphere), Normal) < 0f;
         }
 
         Vector3 CorrectedPosition(MonoPhysicalSphere sphere)
@@ -90,7 +102,14 @@ namespace FutureGames.GamePhysics
             }
             else // sphere is dynamic
             {
-                sphere.Velocity = Reflect(sphere.Velocity, energyDissipation);
+                if (cueMovement != null)
+                {
+                    InverseRelativeVelocity(sphere, Reflect(RelativeVelocity(sphere) + cueMovement.velocity, energyDissipation));
+                }
+                else
+                {
+                    InverseRelativeVelocity(sphere, Reflect(RelativeVelocity(sphere), energyDissipation));
+                }
             }
         }
 
@@ -104,7 +123,7 @@ namespace FutureGames.GamePhysics
 
         bool IsSphereStatic(MonoPhysicalSphere sphere)
         {
-            bool lowVelocity = sphere.Velocity.magnitude < staticVelocityLimit;
+            bool lowVelocity = RelativeVelocity(sphere).magnitude < staticVelocityLimit;
 
             return lowVelocity && TouchingThePlane(sphere);
         }
@@ -113,8 +132,18 @@ namespace FutureGames.GamePhysics
         {
             // sphere speed
             // deltaTime
-            float deltaMove = Mathf.Max(deltaMoveCoef * sphere.Radius, sphere.Velocity.magnitude * Time.fixedDeltaTime);
+            float deltaMove = Mathf.Max(deltaMoveCoef * sphere.Radius, RelativeVelocity(sphere).magnitude * Time.fixedDeltaTime);
             return (CorrectedPosition(sphere) - sphere.transform.position).magnitude <= correctedPostionCoef * deltaMove;
+        }
+    
+        Vector3 RelativeVelocity(MonoPhysicalObject other)
+        {
+            return other.Velocity - ParentVelocity;
+        }
+
+        void InverseRelativeVelocity(MonoPhysicalObject other, Vector3 vel)
+        {
+            other.Velocity = vel + 2f*ParentVelocity;
         }
     }
 }

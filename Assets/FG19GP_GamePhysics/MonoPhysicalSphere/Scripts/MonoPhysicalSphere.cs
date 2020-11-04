@@ -1,28 +1,16 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FutureGames.GamePhysics
 {
-    public class MonoPhysicalSphere : MonoBehaviour
+    public class MonoPhysicalSphere : MonoPhysicalObject
     {
-        [SerializeField]
-        Vector3 velocity = Vector3.zero;
-        public Vector3 Velocity { get => velocity; set => velocity = value; }
-
-        public float mass = 1f;
-
-        [SerializeField]
-        bool useGravity = false;
-
-        public bool isVerlet = false;
-
         public bool onPlane = false;
 
         public float Radius => transform.localScale.x * 0.5f;
 
-        private void FixedUpdate()
+        protected override void FixedUpdateMethod()
         {
-            ApplyForce(new Vector3(0f, 0f, 0f));
+            base.FixedUpdateMethod();
 
             //Vector3 hitPoint = plane.Projection(this);
             //bool isColliding = plane.IsColliding(this);
@@ -43,40 +31,6 @@ namespace FutureGames.GamePhysics
         //    transform.position = correctedPosition;
         //}
 
-        /// <summary>
-        /// Euler integration
-        /// </summary>
-        /// <param name="force"></param>
-        public void ApplyForce(Vector3 force)
-        {
-            Vector3 totalForce = useGravity ? force + mass * Physics.gravity : force;
-
-            // f = m * a
-            // a = f / m
-            Vector3 acc = totalForce / mass;
-
-            Integrate(acc, isVerlet);
-        }
-
-        void Integrate(Vector3 acc, bool isVerlet = false)
-        {
-            if (isVerlet == false) // use Euler
-            {
-                // v1 = v0 + a*detaTime
-                velocity = velocity + acc * Time.fixedDeltaTime;
-
-                // p1 = p0 + v*deltatime
-                transform.position = transform.position + velocity * Time.fixedDeltaTime;
-            }
-            else // use Verlet
-            {
-                transform.position +=
-                    velocity * Time.fixedDeltaTime +
-                    acc * Time.fixedDeltaTime * Time.fixedDeltaTime * 0.5f;
-
-                velocity += acc * Time.fixedDeltaTime * 0.5f; // ??
-            }
-        }
 
         /// <summary>
         /// Assuming the initial velocity is 0
@@ -92,7 +46,7 @@ namespace FutureGames.GamePhysics
         //    return Mathf.Abs(velocity.magnitude - VelocityOnGround());
         //}
 
-        private void OnTriggerEnter(Collider other)
+        protected override void OnTriggerEnterMethod(Collider other)
         {
             UpdateOnPlaneWhenEnter(other);
         }
@@ -106,7 +60,7 @@ namespace FutureGames.GamePhysics
                 onPlane = true;
         }
 
-        private void OnTriggerExit(Collider other)
+        protected override void OnTriggerExitMethod(Collider other)
         {
             UpdateOnPlaneWhenExit(other);
         }
