@@ -14,7 +14,7 @@ namespace FutureGamesLib.Physics
 
         #region state
         Vector3 velocity = Vector3.zero;
-        public Vector3 Velocity { get => velocity; }
+        public Vector3 Velocity { get => velocity; set => velocity = value; }
         public float Speed { get => velocity.magnitude; }
 
         Vector3 position = Vector3.zero;

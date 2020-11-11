@@ -4,6 +4,7 @@ namespace FutureGames.GamePhysics
 {
     public class MonoPhysicalObject : MonoBehaviour
     {
+        [Header("Physics")]
         [SerializeField]
         Vector3 velocity = Vector3.zero;
         public Vector3 Velocity
@@ -31,6 +32,9 @@ namespace FutureGames.GamePhysics
         bool useGravity = false;
 
         public bool isVerlet = true;
+
+        [SerializeField]
+        float dynamicDracCoef = 1.2f;
 
         /// <summary>
         /// Euler integration
@@ -67,6 +71,30 @@ namespace FutureGames.GamePhysics
             }
         }
 
+        MonoPhysicalObject lastCollider = null;
+        const float lastCollisionDelay = 0.01f;
+        float lastCollisionDelayCounter = lastCollisionDelay;
+
+        Collider myCollider = null;
+        public Collider Collider
+        {
+            get
+            {
+                if (myCollider == null)
+                    myCollider = GetComponent<Collider>();
+                return myCollider;
+            }
+        }
+
+        private void Start()
+        {
+            StartMethod();
+        }
+
+        protected virtual void StartMethod()
+        {
+        }
+
         private void Update()
         {
             UpdateMethod();
@@ -74,7 +102,34 @@ namespace FutureGames.GamePhysics
 
         protected virtual void UpdateMethod()
         {
+            HandleLastCollosion();
+        }
 
+        private void HandleLastCollosion()
+        {
+            if (lastCollider != null)
+            {
+                lastCollisionDelayCounter -= Time.deltaTime;
+                if (lastCollisionDelayCounter <= 0f)
+                {
+                    lastCollisionDelayCounter = lastCollisionDelay;
+                    lastCollider = null;
+                }
+            }
+        }
+
+        public bool IsLastColliderEqual(MonoPhysicalObject other)
+        {
+            if (lastCollider == null)
+                return false;
+
+            return other == lastCollider;
+        }
+
+        public void SetLastCollider(MonoPhysicalObject other)
+        {
+            lastCollisionDelayCounter = lastCollisionDelay;
+            lastCollider = other;
         }
 
         private void FixedUpdate()
@@ -97,6 +152,16 @@ namespace FutureGames.GamePhysics
 
         }
 
+        private void OnTriggerStay(Collider other)
+        {
+            OnTriggerStayMethod(other);
+        }
+
+        protected virtual void OnTriggerStayMethod(Collider other)
+        {
+
+        }
+
         private void OnTriggerExit(Collider other)
         {
             OnTriggerExitMethod(other);
@@ -109,6 +174,28 @@ namespace FutureGames.GamePhysics
         protected void LimitVelocity()
         {
             Velocity = Velocity.normalized * Mathf.Min(Velocity.magnitude, maxVelocity);
+        }
+
+        protected void ApplyDynamicDrag()
+        {
+            Vector3 dragForce = -DynamicDragAmount() * Velocity;
+
+            ApplyForce(dragForce);
+        }
+
+        private float DynamicDragAmount()
+        {
+            return Vector3.Dot(Velocity, Velocity) * dynamicDracCoef / 1000f;
+        }
+
+        protected virtual Vector3 RelativeVelocity(MonoPhysicalObject other)
+        {
+            return other.Velocity - Velocity;
+        }
+
+        public Vector3 ClosestPointOnCollider(Vector3 point)
+        {
+            return Collider.ClosestPoint(point);
         }
     }
 }

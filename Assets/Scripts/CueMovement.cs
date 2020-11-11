@@ -64,7 +64,7 @@ public class CueMovement : MonoBehaviour
         bool reset = Input.GetMouseButtonDown(1);
         if (reset)
         {
-            transform.position = new Vector3(50.0f, 5.0f, 0.0f);
+            transform.position = new Vector3(50.0f, 0.0f, 0.0f);
             transform.eulerAngles = new Vector3(0.0f, 0.0f, 90.0f);
         }
         if (draw)

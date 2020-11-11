@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using Unity.Rendering.HybridV2;
+using UnityEngine;
 
 namespace FutureGames.GamePhysics
 {
     public class MonoPhysicalSphere : MonoPhysicalObject
     {
-        public bool onPlane = false;
+        public MonoPlane onPlane = null;
 
         public float Radius => transform.localScale.x * 0.5f;
 
@@ -18,6 +20,8 @@ namespace FutureGames.GamePhysics
             //Debug.DrawLine(transform.position, hitPoint, isColliding ? Color.red : Color.blue);
 
             //CorrectPosition(isColliding, hitPoint);
+
+            ApplyDynamicDrag();
         }
 
         //void CorrectPosition(bool isColliding, Vector3 hitPoint, MonoPlane plane)
@@ -49,15 +53,37 @@ namespace FutureGames.GamePhysics
         protected override void OnTriggerEnterMethod(Collider other)
         {
             UpdateOnPlaneWhenEnter(other);
+
+            DealWithCar(other);
+        }
+
+        private void DealWithCar(Collider other)
+        {
+            MonoCar car = other.GetComponent<MonoCar>();
+            if (car == null)
+                return;
+
+
+
+            Vector3 pointToSphere = (transform.position - car.ContactPointToPushSphere(transform.position)).normalized;
+            float dot = Vector3.Dot(pointToSphere, RelativeVelocity(car));
+
+            Velocity = pointToSphere * dot * car.ballPush;
         }
 
         private void UpdateOnPlaneWhenEnter(Collider other)
         {
-            MonoPlane plane = other.GetComponent<MonoPlane>();
-            if (plane == null)
-                onPlane = false;
-            else
-                onPlane = true;
+            onPlane = other.GetComponent<MonoPlane>();
+        }
+
+        protected override void OnTriggerStayMethod(Collider other)
+        {
+            UpdateOnPlaneWhenStay(other);
+        }
+
+        private void UpdateOnPlaneWhenStay(Collider other)
+        {
+            onPlane = other.GetComponent<MonoPlane>();
         }
 
         protected override void OnTriggerExitMethod(Collider other)
@@ -69,7 +95,7 @@ namespace FutureGames.GamePhysics
         {
             MonoPlane plane = other.GetComponent<MonoPlane>();
             if (plane != null)
-                onPlane = false;
+                onPlane = null;
         }
     }
 }

@@ -1,33 +1,39 @@
-﻿using System;
+﻿using FutureGamesLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FutureGames.GamePhysics
 {
-    public class MonoPlane : MonoBehaviour
+    public class MonoPlane : MonoBehaviour, ISphersCollidable
     {
-        [SerializeField]
-        CueMovement cueMovement;
-
         Vector3 Normal => transform.up;
         Vector3 Position => transform.position;
 
-        MonoPhysicalSphere[] spheres = new MonoPhysicalSphere[0];
+        List<MonoPhysicalSphere> spheres = new List<MonoPhysicalSphere>();
 
         const float staticVelocityLimit = 0.2f;
         const float deltaMoveCoef = 0.2f;
-        const float correctedPostionCoef = 2.5f;
+        const float correctedPostionCoef = 5f;
 
         MonoPhysicalObject ParentPhysicalObject => GetComponentInParent<MonoPhysicalObject>();
 
         Vector3 ParentVelocity => ParentPhysicalObject == null ? Vector3.zero : ParentPhysicalObject.Velocity;
 
+        private void OnEnable()
+        {
+            MonoCar.ballFired += BallFiredListener;
+            LifeTime.IAmGone += SomeOneHasGone;
+        }
+
+        private void OnDisable()
+        {
+            MonoCar.ballFired -= BallFiredListener;
+            LifeTime.IAmGone -= SomeOneHasGone;
+        }
+
         private void Start()
         {
-            spheres = FindObjectsOfType<MonoPhysicalSphere>();
-            if (cueMovement == null)
-            {
-                cueMovement = FindObjectOfType<CueMovement>();
-            }
+            FindSpheres();
         }
 
         private void FixedUpdate()
@@ -37,9 +43,9 @@ namespace FutureGames.GamePhysics
 
         private void UpdateSpheres()
         {
-            foreach(MonoPhysicalSphere t in spheres)
+            foreach (MonoPhysicalSphere t in spheres)
             {
-                if (t.onPlane)
+                if (t.onPlane == this)
                     Choc(t, GlobalPhysicsParameters.chocEnergyDissipation);
             }
         }
@@ -62,16 +68,18 @@ namespace FutureGames.GamePhysics
 
         bool IsColliding(MonoPhysicalSphere sphere)
         {
-            //if (WillBeCollision(sphere) == false)
-            //    return false;
+            if (WillBeCollision(sphere) == false)
+                return false;
 
-            //return Distance(sphere) >= 0f || Mathf.Abs(Distance(sphere)) <= sphere.Radius;
+            return Distance(sphere) >= 0f || Mathf.Abs(Distance(sphere)) <= sphere.Radius;
 
-            return TouchingThePlane(sphere) && WillBeCollision(sphere);
+            // for dynamic ball the WillBeCollision is preventing the multi-collision;
+            //return WillBeCollision(sphere) && TouchingThePlane(sphere);
         }
 
         bool WillBeCollision(MonoPhysicalSphere sphere)
         {
+            //Debug.Log("WillBeCollision: " + name);
             //return Vector3.Dot(sphere.Velocity, Normal) < 0f;
             return Vector3.Dot(RelativeVelocity(sphere), Normal) < 0f;
         }
@@ -88,28 +96,25 @@ namespace FutureGames.GamePhysics
         /// <param name="energyDissipation" the impact of the energy dissipation on the reflected velocity></param>
         public void Choc(MonoPhysicalSphere sphere, float energyDissipation = 0f)
         {
+            //Debug.Log("choc: " + name);
             if (IsColliding(sphere) == false)
                 return;
 
+            //Debug.Log("Sphere plane collision on: " + name);
             //Debug.Log("Velocity Error: isVerlet: " + sphere.isVerlet + " " + sphere.ErrorVelocityOnTheGround());
 
             //sphere.Velocity = Vector3.Reflect(sphere.Velocity, Normal);
 
-            if (IsSphereStatic(sphere))
+            if (IsSphereStaticOnPlane(sphere))
             {
                 sphere.transform.position = CorrectedPosition(sphere);
                 sphere.ApplyForce(-sphere.mass * Physics.gravity);
             }
             else // sphere is dynamic
             {
-                if (cueMovement != null)
-                {
-                    InverseRelativeVelocity(sphere, Reflect(RelativeVelocity(sphere) + cueMovement.velocity, energyDissipation));
-                }
-                else
-                {
-                    InverseRelativeVelocity(sphere, Reflect(RelativeVelocity(sphere), energyDissipation));
-                }
+                sphere.transform.position = CorrectedPosition(sphere);
+                InverseRelativeVelocity(sphere, Reflect(RelativeVelocity(sphere), energyDissipation));
+                //sphere.Velocity = Reflect(RelativeVelocity(sphere), energyDissipation);
             }
         }
 
@@ -121,7 +126,7 @@ namespace FutureGames.GamePhysics
             return r;
         }
 
-        bool IsSphereStatic(MonoPhysicalSphere sphere)
+        bool IsSphereStaticOnPlane(MonoPhysicalSphere sphere)
         {
             bool lowVelocity = RelativeVelocity(sphere).magnitude < staticVelocityLimit;
 
@@ -135,15 +140,45 @@ namespace FutureGames.GamePhysics
             float deltaMove = Mathf.Max(deltaMoveCoef * sphere.Radius, RelativeVelocity(sphere).magnitude * Time.fixedDeltaTime);
             return (CorrectedPosition(sphere) - sphere.transform.position).magnitude <= correctedPostionCoef * deltaMove;
         }
-    
+
         Vector3 RelativeVelocity(MonoPhysicalObject other)
         {
+            //Debug.Log("Sphere Vel: " + other.Velocity + " Car Vel: " + ParentVelocity);
             return other.Velocity - ParentVelocity;
         }
 
         void InverseRelativeVelocity(MonoPhysicalObject other, Vector3 vel)
         {
-            other.Velocity = vel + 2f*ParentVelocity;
+            other.Velocity = vel + 2f * ParentVelocity;
+        }
+
+        public void FindSpheres()
+        {
+            spheres = new List<MonoPhysicalSphere>(FindObjectsOfType<MonoPhysicalSphere>());
+        }
+
+        public void SomeOneHasGone(string obj)
+        {
+            if (obj == typeof(MonoPhysicalSphereLifeTime).ToString())
+            {
+                CleanSphersList();
+            }
+        }
+
+        public void CleanSphersList()
+        {
+            for (int i = spheres.Count - 1; i > -1; i--)
+            {
+                if (spheres[i] != null)
+                    continue;
+
+                spheres.RemoveAt(i);
+            }
+        }
+
+        public void BallFiredListener()
+        {
+            FindSpheres();
         }
     }
 }
