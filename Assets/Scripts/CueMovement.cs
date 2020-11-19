@@ -6,7 +6,7 @@ public class CueMovement : MonoBehaviour
     private const float mass = 1.0f;
     private float oneOverMass = 1 / mass;
     [SerializeField]
-    Vector3 input;
+    private Vector3 input;
     [SerializeField]
     public Vector3 velocity;
     [SerializeField]
@@ -34,6 +34,8 @@ public class CueMovement : MonoBehaviour
     public float sensitivityX = 1.0f;
     public float sensitivityY = 1.0f;
 
+    public Vector3 Playerinput { get => input; }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -50,32 +52,32 @@ public class CueMovement : MonoBehaviour
         rotationY = -Mathf.Clamp(rotationY, minimumY, maximumY);
         if (rotationX != 0.0f)
         {
-            transform.Rotate(Vector3.right, rotationX);
+            transform.Rotate(Vector3.up, rotationX);
         }
         //if (rotationY != 0.0f)
         //{
         //    transform.Rotate(Vector3.forward, rotationY);
         //}
-        input.z = Input.GetAxis(horizontal) * 100f;
-        input.y = Input.GetAxis(vertical) * 100f;
+        //input.z = Input.GetAxis(horizontal) * 100f;
+        //input.y = Input.GetAxis(vertical) * 100f;
         input.x = 0.0f;
-        bool draw = Input.GetMouseButton(0);
-        bool shoot = Input.GetMouseButtonUp(0);
+        //bool draw = Input.GetMouseButton(0);
+        //bool shoot = Input.GetMouseButtonUp(0);
         bool reset = Input.GetMouseButtonDown(1);
         if (reset)
         {
             transform.position = new Vector3(50.0f, 0.0f, 0.0f);
-            transform.eulerAngles = new Vector3(0.0f, 0.0f, 90.0f);
+            transform.eulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
         }
-        if (draw)
-        {
-            input.x = -50.0f;
-            drawTime += Time.deltaTime;
-        }
-        if (shoot)
-        {
-            shot = true;
-        }
+        //if (draw)
+        //{
+        //    input.x = -50.0f;
+        //    drawTime += Time.deltaTime;
+        //}
+        //if (shoot)
+        //{
+        //    shot = true;
+        //}
         if (shot)
         {
             input.x = drawTime * 1000.0f;
@@ -93,8 +95,8 @@ public class CueMovement : MonoBehaviour
         }
         Vector3 directionForward = transform.up;
         Vector3 directionRight = transform.forward;
-        Vector3 force = input.z * directionRight + input.x * directionForward;
-        force.y = input.y;
+        Vector3 force = /*input.z * directionRight +*/ input.x * directionForward;
+        //force.y = input.y;
         ApplyForce(force);
     }
 

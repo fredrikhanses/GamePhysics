@@ -8,7 +8,7 @@ namespace FutureGames.GamePhysics
         /// The effect of the dissipation on the velocity:
         /// if enter velocity = 1, reflected velocity = 0.95
         /// </summary>
-        public const float chocEnergyDissipation = 0.5f;
+        public const float chocEnergyDissipation = 0.1f;
 
         /// <summary>
         /// Universal gravity constant

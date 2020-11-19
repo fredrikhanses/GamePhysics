@@ -108,13 +108,13 @@ namespace FutureGames.GamePhysics
 
         protected override void UpdateMethod()
         {
-            transform.Rotate(transform.up * SteeringInput() * steering * Time.deltaTime);
+            //transform.Rotate(transform.up * SteeringInput() * steering * Time.deltaTime);
 
             //grounded = DetectGround();
 
-            Jump();
+            //Jump();
 
-            Shoot();
+            //Shoot();
         }
 
         private void Shoot()

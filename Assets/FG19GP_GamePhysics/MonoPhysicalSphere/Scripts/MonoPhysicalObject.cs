@@ -56,7 +56,7 @@ namespace FutureGames.GamePhysics
             if (isVerlet == false) // use Euler
             {
                 // v1 = v0 + a*detaTime
-                Velocity = Velocity + acc * Time.fixedDeltaTime;
+                Velocity += acc * Time.fixedDeltaTime;
 
                 // p1 = p0 + v*deltatime
                 transform.position = transform.position + Velocity * Time.fixedDeltaTime;
