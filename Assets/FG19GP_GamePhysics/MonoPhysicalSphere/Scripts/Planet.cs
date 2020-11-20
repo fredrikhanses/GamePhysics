@@ -47,7 +47,7 @@ namespace FutureGames.GamePhysics
             FindSpheres();
         }
 
-        public void CleanSphersList()
+        public void CleanSpheresList()
         {
             for (int i = planets.Count - 1; i > -1; i--)
             {

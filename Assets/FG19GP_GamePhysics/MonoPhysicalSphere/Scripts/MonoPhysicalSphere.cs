@@ -6,6 +6,16 @@ namespace FutureGames.GamePhysics
 {
     public class MonoPhysicalSphere : MonoPhysicalObject
     {
+        [SerializeField]
+        private bool cueBallWhite;
+
+        [SerializeField]
+        private bool eightBallBlack;
+
+        public bool CueBallWhite => cueBallWhite;
+
+        public bool EightBallBlack => eightBallBlack;
+
         public MonoPlane onPlane = null;
 
         public float Radius => transform.localScale.x * 0.5f;

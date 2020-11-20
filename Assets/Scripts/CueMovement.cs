@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using FutureGames.GamePhysics;
+using UnityEngine;
 
 public class CueMovement : MonoBehaviour
 {
@@ -33,6 +34,10 @@ public class CueMovement : MonoBehaviour
     float rotationX = 0.0f;
     public float sensitivityX = 1.0f;
     public float sensitivityY = 1.0f;
+    [SerializeField]
+    MonoPhysicalSphere cueBallWhite;
+    [SerializeField]
+    MonoPhysicalSphere eightBallBlack;
 
     public Vector3 Playerinput { get => input; }
 
@@ -41,6 +46,20 @@ public class CueMovement : MonoBehaviour
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        if (cueBallWhite == null || eightBallBlack == null)
+        {
+            foreach(MonoPhysicalSphere ball in FindObjectsOfType<MonoPhysicalSphere>())
+            {
+                if (ball.CueBallWhite == true)
+                {
+                    cueBallWhite = ball;
+                }
+                if (ball.EightBallBlack == true)
+                {
+                    eightBallBlack = ball;
+                }
+            }
+        }
     }
 
     // Update is called once per frame
@@ -66,8 +85,9 @@ public class CueMovement : MonoBehaviour
         bool reset = Input.GetMouseButtonDown(1);
         if (reset)
         {
-            transform.position = new Vector3(50.0f, 0.0f, 0.0f);
-            transform.eulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+//             transform.rotation = Quaternion.LookRotation(new Vector3(0.0f, 1.0f, 0.0f) - new Vector3(cueBallWhite.transform.position.z, 1.0f, cueBallWhite.transform.position.z));
+            transform.position = new Vector3(cueBallWhite.transform.position.z, 1.0f, cueBallWhite.transform.position.z);
+            //transform.position -= transform.forward * 20.0f;
         }
         //if (draw)
         //{
@@ -110,15 +130,15 @@ public class CueMovement : MonoBehaviour
         }
         transform.position += velocity * Time.deltaTime;
         speed = velocity.magnitude;
-        if (transform.position.x > 50.0f)
+        if (transform.position.x > 75.0f)
         {
-            Vector3 temp = new Vector3(transform.position.x - 50.0f, 0.0f, 0.0f);
+            Vector3 temp = new Vector3(transform.position.x - 75.0f, 0.0f, 0.0f);
             transform.position -= temp;
             velocity = Vector3.zero;
         }
-        if (transform.position.x < -50.0f)
+        if (transform.position.x < -75.0f)
         {
-            Vector3 temp = new Vector3(transform.position.x + 50.0f, 0.0f, 0.0f);
+            Vector3 temp = new Vector3(transform.position.x + 75.0f, 0.0f, 0.0f);
             transform.position -= temp;
             velocity = Vector3.zero;
         }
@@ -134,15 +154,15 @@ public class CueMovement : MonoBehaviour
             transform.position -= temp;
             velocity = Vector3.zero;
         }
-        if (transform.position.z > 25.0f)
+        if (transform.position.z > 50.0f)
         {
-            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z - 25.0f);
+            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z - 50.0f);
             transform.position -= temp;
             velocity = Vector3.zero;
         }
-        if (transform.position.z < -25.0f)
+        if (transform.position.z < -50.0f)
         {
-            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z + 25.0f);
+            Vector3 temp = new Vector3(0.0f, 0.0f, transform.position.z + 50.0f);
             transform.position -= temp;
             velocity = Vector3.zero;
         }

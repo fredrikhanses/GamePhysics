@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace FutureGames.GamePhysics
+﻿namespace FutureGames.GamePhysics
 {
     public static class GlobalPhysicsParameters
     {

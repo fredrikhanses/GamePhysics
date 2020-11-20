@@ -138,11 +138,11 @@ namespace FutureGames.GamePhysics
             //Debug.Log(typeof(MonoPhysicalSphereLifeTime).ToString());
             if (obj == typeof(MonoPhysicalSphereLifeTime).ToString())
             {
-                CleanSphersList();
+                CleanSpheresList();
             }
         }
 
-        public void CleanSphersList()
+        public void CleanSpheresList()
         {
             for (int i = spheres.Count - 1; i > -1; i--)
             {

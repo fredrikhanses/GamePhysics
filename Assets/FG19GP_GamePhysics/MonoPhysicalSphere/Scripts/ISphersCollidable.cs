@@ -5,6 +5,6 @@
         void BallFiredListener();
         void FindSpheres();
         void SomeOneHasGone(string obj);
-        void CleanSphersList();
+        void CleanSpheresList();
     }
 }

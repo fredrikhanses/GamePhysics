@@ -43,7 +43,6 @@ namespace FutureGames.GamePhysics
         public void ApplyForce(Vector3 force)
         {
             Vector3 totalForce = useGravity ? force + mass * Physics.gravity : force;
-
             // f = m * a
             // a = f / m
             Vector3 acc = totalForce / mass;
@@ -57,7 +56,10 @@ namespace FutureGames.GamePhysics
             {
                 // v1 = v0 + a*detaTime
                 Velocity += acc * Time.fixedDeltaTime;
-
+                if (velocity.magnitude > maxVelocity)
+                {
+                    Velocity = Velocity.normalized * maxVelocity;
+                }
                 // p1 = p0 + v*deltatime
                 transform.position = transform.position + Velocity * Time.fixedDeltaTime;
             }
@@ -68,6 +70,10 @@ namespace FutureGames.GamePhysics
                     acc * Time.fixedDeltaTime * Time.fixedDeltaTime * 0.5f;
 
                 Velocity += acc * Time.fixedDeltaTime * 0.5f; // ??
+                if (velocity.magnitude > maxVelocity)
+                {
+                    Velocity = Velocity.normalized * maxVelocity;
+                }
             }
         }
 
